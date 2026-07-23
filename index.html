@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SolarClean AI – Predictive Solar Maintenance & Weather Intelligence Platform</title>
+  <meta name="description" content="AI-powered solar panel cleaning schedule optimization platform utilizing weather intelligence, power output analysis, and computer vision dust detection.">
+
+  <!-- Google Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <!-- CSS Design System -->
+  <link rel="stylesheet" href="css/styles.css">
+
+  <!-- External Libraries (Three.js & Chart.js via CDN) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <!-- 3D Background Canvas (Cognizance Tech-Fest Aesthetic) -->
+  <canvas id="canvas-3d-bg"></canvas>
+
+  <!-- Application Shell -->
+  <div id="app">
+    
+    <!-- Top Glassmorphism Navigation Bar -->
+    <header class="navbar">
+      <div class="brand-container">
+        <div class="brand-logo">
+          <i data-lucide="sun"></i>
+        </div>
+        <div>
+          <h1 class="brand-title">SolarClean AI</h1>
+          <span class="brand-tag">PREDICTIVE MAINTENANCE ENGINE</span>
+        </div>
+      </div>
+
+      <!-- User Scoped Array Selector -->
+      <div class="site-select-wrapper">
+        <i data-lucide="map-pin" style="color: var(--solar-yellow);"></i>
+        <select id="site-select">
+          <option value="sahara-50mw">Sahara Mega Solar Farm (50 MW)</option>
+          <option value="california-250kw">California Commercial Rooftop (250 kW)</option>
+          <option value="bavaria-12kw">Bavaria Eco Residential (12 kW)</option>
+        </select>
+      </div>
+
+      <!-- Live Open-Meteo Weather Ticker -->
+      <div class="weather-ticker">
+        <div class="weather-item"><i data-lucide="thermometer"></i> <strong id="wt-temp">--°C</strong></div>
+        <div class="weather-item"><i data-lucide="droplets"></i> <strong id="wt-humidity">--%</strong></div>
+        <div class="weather-item"><i data-lucide="wind"></i> <strong id="wt-wind">-- km/h</strong></div>
+        <div class="weather-item"><i data-lucide="cloud-rain"></i> Rain 24h: <strong id="wt-rain">-- mm</strong></div>
+        <div class="weather-item"><i data-lucide="sun-medium"></i> Solar: <strong id="wt-irradiance">-- W/m²</strong></div>
+      </div>
+
+      <!-- User Auth Profile Widget -->
+      <div class="user-profile-badge" id="user-profile-widget">
+        <div style="display: flex; align-items: center; gap: 0.6rem;">
+          <div class="user-avatar" id="user-avatar-icon"><i data-lucide="user"></i></div>
+          <div style="text-align: left;">
+            <div id="user-display-name" style="font-size: 0.85rem; font-weight: 700; color: #FFF;">Dr. Sarah Connor</div>
+            <div id="user-display-role" style="font-size: 0.7rem; color: var(--solar-yellow-glow);">admin@solarclean.ai</div>
+          </div>
+          <button class="btn-outline" id="btn-auth-action" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; margin-left: 0.5rem;" title="Switch Account or Logout">
+            <i data-lucide="log-out"></i> Logout
+          </button>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs (Smooth Scroll Anchors) -->
+      <nav class="nav-tabs">
+        <button class="nav-tab active" data-tab="tab-dashboard"><i data-lucide="layout-dashboard"></i> Dashboard</button>
+        <button class="nav-tab" data-tab="tab-weather"><i data-lucide="cloud-sun"></i> Weather Analysis</button>
+        <button class="nav-tab" data-tab="tab-power"><i data-lucide="zap"></i> Power Analysis</button>
+        <button class="nav-tab" data-tab="tab-ai-engine"><i data-lucide="cpu"></i> AI Recommendations</button>
+        <button class="nav-tab" data-tab="tab-vision"><i data-lucide="scan"></i> Dust CV Analysis</button>
+        <button class="nav-tab" data-tab="tab-calculator"><i data-lucide="calculator"></i> Sustainability ROI</button>
+        <button class="nav-tab" data-tab="tab-analytics"><i data-lucide="bar-chart-3"></i> Analytics</button>
+      </nav>
+    </header>
+
+    <!-- Main Content Workspace - Single Continuous Scroll Page -->
+    <main class="main-content">
+
+      <!-- SECTION 1: Smart Dashboard -->
+      <section id="tab-dashboard" class="tab-pane">
+        <div class="section-main-heading">
+          <i data-lucide="layout-dashboard"></i> Smart Solar Dashboard
+        </div>
+        
+        <!-- KPI Cards Grid -->
+        <div class="kpi-grid">
+          <div class="glass-card kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-title">Total Solar Capacity</span>
+              <div class="kpi-icon yellow"><i data-lucide="zap"></i></div>
+            </div>
+            <div class="kpi-value-row">
+              <span class="kpi-value" id="kpi-capacity">50 MW</span>
+            </div>
+            <div class="kpi-subtext">Peak STC Rating</div>
+          </div>
+
+          <div class="glass-card kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-title">Current Efficiency</span>
+              <div class="kpi-icon green"><i data-lucide="activity"></i></div>
+            </div>
+            <div class="kpi-value-row">
+              <span class="kpi-value" id="kpi-efficiency">19.8%</span>
+              <span class="kpi-unit">/ 21.5%</span>
+            </div>
+            <div class="kpi-subtext"><span class="kpi-badge good">GOOD</span> Operative Yield</div>
+          </div>
+
+          <div class="glass-card kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-title">Estimated Soiling Score</span>
+              <div class="kpi-icon red"><i data-lucide="alert-circle"></i></div>
+            </div>
+            <div class="kpi-value-row">
+              <span class="kpi-value" id="kpi-soiling">8.5%</span>
+            </div>
+            <div class="kpi-subtext"><span class="kpi-badge warn">DUST BUILDUP</span> Dust & Pollen</div>
+          </div>
+
+          <div class="glass-card kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-title">Daily Energy Loss</span>
+              <div class="kpi-icon yellow"><i data-lucide="battery-charging"></i></div>
+            </div>
+            <div class="kpi-value-row">
+              <span class="kpi-value" id="kpi-loss-kwh">180 kWh</span>
+            </div>
+            <div class="kpi-subtext">Due to dust accumulation</div>
+          </div>
+
+          <div class="glass-card kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-title">Predicted Cleaning Date</span>
+              <div class="kpi-icon cyan"><i data-lucide="calendar"></i></div>
+            </div>
+            <div class="kpi-value-row">
+              <span class="kpi-value" id="kpi-cleaning-date" style="font-size: 1.3rem;">In 5 Days</span>
+            </div>
+            <div class="kpi-subtext">AI Weather-Aware Model</div>
+          </div>
+
+          <div class="glass-card kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-title">Revenue Loss / Day</span>
+              <div class="kpi-icon purple"><i data-lucide="dollar-sign"></i></div>
+            </div>
+            <div class="kpi-value-row">
+              <span class="kpi-value" id="kpi-cost-savings">$14.50</span>
+              <span class="kpi-unit">/day</span>
+            </div>
+            <div class="kpi-subtext">Ungenerated Electricity</div>
+          </div>
+
+          <div class="glass-card kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-title">Water Conserved</span>
+              <div class="kpi-icon green"><i data-lucide="droplet"></i></div>
+            </div>
+            <div class="kpi-value-row">
+              <span class="kpi-value" id="kpi-water-saved">8,000 L</span>
+            </div>
+            <div class="kpi-subtext"><span class="kpi-badge good">ECO SAVINGS</span> Saved via Rain Sync</div>
+          </div>
+        </div>
+
+        <!-- AI Primary Recommendation Banner -->
+        <div class="ai-recommendation-hero">
+          <div class="ai-rec-badge-icon">
+            <i data-lucide="sparkles"></i>
+          </div>
+          <div class="ai-rec-content">
+            <div class="ai-rec-tagline">SolarClean AI Recommendation</div>
+            <div class="ai-rec-headline" id="ai-rec-headline">Evaluating array state...</div>
+            <div class="ai-rec-reasoning" id="ai-rec-reasoning">Analyzing rainfall forecasts and soiling rates...</div>
+            <div class="ai-rec-stats">
+              <div class="ai-stat-item">
+                <span class="ai-stat-lbl">AI Confidence Score</span>
+                <span class="ai-stat-val" id="ai-confidence-val">96%</span>
+              </div>
+              <div class="ai-stat-item">
+                <span class="ai-stat-lbl">Cleaning Payback Period</span>
+                <span class="ai-stat-val" id="ai-payback-val">4 Days</span>
+              </div>
+              <div class="ai-stat-item">
+                <span class="ai-stat-lbl">Daily Soiling Loss</span>
+                <span class="ai-stat-val" id="ai-loss-val">$14.50</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dashboard Charts Overview -->
+        <div class="grid-2col">
+          <div class="glass-card">
+            <div class="section-header">
+              <h3 class="section-title"><i data-lucide="trending-down"></i> 100+ Day Historical Soiling & Cleaning Trend</h3>
+            </div>
+            <div style="height: 300px;">
+              <canvas id="chart-soiling-trend"></canvas>
+            </div>
+          </div>
+
+          <div class="glass-card">
+            <div class="section-header">
+              <h3 class="section-title"><i data-lucide="sun"></i> Expected vs Actual Diurnal Power Curve</h3>
+            </div>
+            <div style="height: 300px;">
+              <canvas id="chart-power-curve"></canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 2: Weather Analysis -->
+      <section id="tab-weather" class="tab-pane">
+        <div class="section-main-heading">
+          <i data-lucide="cloud-sun"></i> Weather Intelligence & Rain Forecast Analysis
+        </div>
+        
+        <div class="glass-card" style="margin-bottom: 2rem;">
+          <div class="section-header">
+            <h3 class="section-title"><i data-lucide="cloud-sun"></i> Live Open-Meteo Weather Model</h3>
+          </div>
+          <div id="weather-detail-card">
+            <p>Fetching real-time weather coordinates...</p>
+          </div>
+        </div>
+
+        <div class="glass-card">
+          <div class="section-header">
+            <h3 class="section-title"><i data-lucide="cloud-rain"></i> Rainfall Forecast vs Dust Accumulation Index</h3>
+          </div>
+          <div style="height: 360px;">
+            <canvas id="chart-rain-dust"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 3: Power Analysis -->
+      <section id="tab-power" class="tab-pane">
+        <div class="section-main-heading">
+          <i data-lucide="zap"></i> Power Generation Output Analysis
+        </div>
+
+        <div class="glass-card">
+          <div class="section-header">
+            <h3 class="section-title"><i data-lucide="file-spreadsheet"></i> Upload Inverter CSV Telemetry Data</h3>
+            <button class="btn-solar" id="btn-upload-csv"><i data-lucide="upload"></i> Upload CSV File</button>
+            <input type="file" id="csv-file-input" accept=".csv" style="display: none;">
+          </div>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.5rem;">
+            Applied Soiling Formula: <code style="color: var(--solar-yellow); font-family: var(--font-mono);">Soiling Score = ((Expected Output - Actual Output) / Expected Output) × 100</code>
+          </p>
+        </div>
+      </section>
+
+      <!-- SECTION 4: AI Recommendations -->
+      <section id="tab-ai-engine" class="tab-pane">
+        <div class="section-main-heading">
+          <i data-lucide="cpu"></i> AI Predictive Cleaning Recommendations Engine
+        </div>
+
+        <div class="glass-card">
+          <div class="section-header">
+            <h3 class="section-title"><i data-lucide="cpu"></i> Optimization & Weather Override Matrix</h3>
+          </div>
+          <p style="color: var(--text-muted); line-height: 1.6;">
+            The SolarClean AI recommendation engine synthesizes 7-day precipitation forecasts from Open-Meteo, daily inverter power degradation, glass surface abrasion limits, and cleaning ROI to prevent wasteful washing operations.
+          </p>
+        </div>
+      </section>
+
+      <!-- SECTION 5: Dust CV Analysis -->
+      <section id="tab-vision" class="tab-pane">
+        <div class="section-main-heading">
+          <i data-lucide="scan"></i> Image-Based Computer Vision Dust Detection
+        </div>
+
+        <div class="glass-card vision-container">
+          <div>
+            <div class="section-header">
+              <h3 class="section-title"><i data-lucide="camera"></i> Computer Vision Panel Dust Analysis</h3>
+            </div>
+            
+            <div class="dropzone-area" id="vision-dropzone">
+              <i data-lucide="image" style="width: 48px; height: 48px; color: var(--solar-yellow); margin-bottom: 0.5rem;"></i>
+              <h4 style="color: #FFF; margin-bottom: 0.3rem;">Upload Solar Panel Photo</h4>
+              <p style="font-size: 0.8rem; color: var(--text-muted);">Drag and drop image file or select from curated sample panels below</p>
+              <input type="file" id="vision-file-input" accept="image/*" style="display: none;">
+            </div>
+
+            <div class="sample-images-bar">
+              <div class="sample-img-thumb selected" data-preset="slight" title="Slightly Dirty Panel">
+                <div style="width: 100%; height: 100%; background: #1e3a8a; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; color: #FFF; border-radius: 8px;">Slight</div>
+              </div>
+              <div class="sample-img-thumb" data-preset="moderate" title="Moderate Dust Panel">
+                <div style="width: 100%; height: 100%; background: #854d0e; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; color: #FFF; border-radius: 8px;">Moderate</div>
+              </div>
+              <div class="sample-img-thumb" data-preset="heavy" title="Heavily Soiled Panel">
+                <div style="width: 100%; height: 100%; background: #78350f; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; color: #FFF; border-radius: 8px;">Heavy</div>
+              </div>
+              <div class="sample-img-thumb" data-preset="clean" title="Clean Panel">
+                <div style="width: 100%; height: 100%; background: #065f46; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; color: #FFF; border-radius: 8px;">Clean</div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="canvas-preview-box">
+              <canvas id="vision-canvas"></canvas>
+            </div>
+
+            <div class="heatmap-toggle-bar">
+              <button class="btn-outline" id="btn-toggle-heatmap"><i data-lucide="layers"></i> Toggle Heatmap Overlay</button>
+              <span class="kpi-badge good" id="vision-condition">Slightly Dirty</span>
+            </div>
+
+            <div style="margin-top: 1rem; padding: 1rem; background: rgba(15, 23, 42, 0.8); border-radius: 12px; border: 1px solid var(--border-glass);">
+              <p>• Estimated Dust Coverage: <strong id="vision-dust-pct" style="color: var(--solar-yellow-glow);">7.4%</strong></p>
+              <p>• Detection Confidence: <strong id="vision-confidence" style="color: var(--eco-green-glow);">94%</strong></p>
+              <p>• Actionable Recommendation: <span id="vision-recommendation" style="color: var(--text-muted);">Monitor buildup over dry period.</span></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 6: Sustainability ROI -->
+      <section id="tab-calculator" class="tab-pane">
+        <div class="section-main-heading">
+          <i data-lucide="calculator"></i> Sustainability & ESG ROI Calculator
+        </div>
+
+        <div class="grid-2col">
+          <div class="glass-card">
+            <div class="section-header">
+              <h3 class="section-title"><i data-lucide="sliders"></i> Interactive Cost & Sustainability Parameters</h3>
+            </div>
+
+            <div class="slider-group">
+              <div class="slider-lbl"><span>Array Capacity (kW)</span><span id="lbl-calc-capacity">250 kW</span></div>
+              <input type="range" id="calc-capacity" min="10" max="50000" step="10" value="250">
+            </div>
+
+            <div class="slider-group">
+              <div class="slider-lbl"><span>Electricity Tariff ($/kWh)</span><span id="lbl-calc-tariff">$0.15/kWh</span></div>
+              <input type="range" id="calc-tariff" min="0.05" max="0.50" step="0.01" value="0.15">
+            </div>
+
+            <div class="slider-group">
+              <div class="slider-lbl"><span>Manual Washing Cost ($/clean)</span><span id="lbl-calc-wash-cost">$150</span></div>
+              <input type="range" id="calc-wash-cost" min="20" max="3000" step="10" value="150">
+            </div>
+
+            <div class="slider-group">
+              <div class="slider-lbl"><span>Water Used Per Clean (L)</span><span id="lbl-calc-water">600 L</span></div>
+              <input type="range" id="calc-water" min="50" max="10000" step="50" value="600">
+            </div>
+          </div>
+
+          <div class="glass-card">
+            <div class="section-header">
+              <h3 class="section-title"><i data-lucide="leaf"></i> Estimated ESG & Financial Savings</h3>
+            </div>
+
+            <div class="kpi-grid" style="grid-template-columns: 1fr 1fr; margin-bottom: 0;">
+              <div class="glass-card" style="padding: 1rem;">
+                <span style="font-size: 0.75rem; color: var(--text-muted);">Net Annual Cost Savings</span>
+                <div style="font-size: 1.5rem; font-weight: 800; color: var(--solar-yellow-glow);" id="calc-res-savings">$2,450</div>
+              </div>
+
+              <div class="glass-card" style="padding: 1rem;">
+                <span style="font-size: 0.75rem; color: var(--text-muted);">Annual Water Saved</span>
+                <div style="font-size: 1.5rem; font-weight: 800; color: var(--cyber-cyan-glow);" id="calc-res-water">9,600 L</div>
+              </div>
+
+              <div class="glass-card" style="padding: 1rem;">
+                <span style="font-size: 0.75rem; color: var(--text-muted);">Extra Recovered Energy</span>
+                <div style="font-size: 1.5rem; font-weight: 800; color: var(--eco-green-glow);" id="calc-res-mwh">14.8 MWh</div>
+              </div>
+
+              <div class="glass-card" style="padding: 1rem;">
+                <span style="font-size: 0.75rem; color: var(--text-muted);">CO₂ Emissions Avoided</span>
+                <div style="font-size: 1.5rem; font-weight: 800; color: var(--neon-purple);" id="calc-res-co2">10.5 Tons</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 7: Analytics -->
+      <section id="tab-analytics" class="tab-pane">
+        <div class="section-main-heading">
+          <i data-lucide="bar-chart-3"></i> Interactive Performance Analytics
+        </div>
+
+        <div class="glass-card">
+          <div class="section-header">
+            <h3 class="section-title"><i data-lucide="bar-chart-3"></i> Monthly Energy Production (Expected vs Actual)</h3>
+          </div>
+          <div style="height: 380px;">
+            <canvas id="chart-monthly-prod"></canvas>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- AUTH MODAL OVERLAY (Login & Registration) -->
+  <div class="auth-overlay" id="auth-modal">
+    <div class="auth-card">
+      <div class="auth-header">
+        <div class="brand-logo" style="width: 36px; height: 36px; margin: 0 auto 0.5rem auto;">
+          <i data-lucide="sun"></i>
+        </div>
+        <h2 style="color: #FFF; font-size: 1.4rem; font-weight: 800; text-align: center;">SolarClean AI Portal</h2>
+        <p style="color: var(--text-muted); font-size: 0.8rem; text-align: center; margin-top: 0.2rem;">Predictive Maintenance Telemetry Access</p>
+      </div>
+
+      <div class="auth-tabs">
+        <button class="auth-tab-btn active" id="btn-tab-login">Sign In</button>
+        <button class="auth-tab-btn" id="btn-tab-register">Sign Up</button>
+      </div>
+
+      <!-- Sign In Form -->
+      <form id="form-login" class="auth-form">
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="login-email" placeholder="name@solarcompany.com" required value="admin@solarclean.ai">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="login-password" placeholder="••••••••" required value="solar123">
+        </div>
+        <button type="submit" class="btn-solar" style="width: 100%; justify-content: center; margin-top: 0.5rem;">
+          <i data-lucide="log-in"></i> Sign In to Dashboard
+        </button>
+
+        <div style="margin-top: 1rem; border-top: 1px solid var(--border-glass); padding-top: 0.8rem;">
+          <span style="font-size: 0.75rem; color: var(--text-dim); display: block; margin-bottom: 0.4rem; text-align: center;">QUICK DEMO ACCOUNTS</span>
+          <div style="display: flex; gap: 0.3rem; justify-content: center; flex-wrap: wrap;">
+            <button type="button" class="chip-btn demo-user-btn" data-email="admin@solarclean.ai">Sahara 50MW</button>
+            <button type="button" class="chip-btn demo-user-btn" data-email="rooftop@california.com">California 250kW</button>
+            <button type="button" class="chip-btn demo-user-btn" data-email="homeowner@bavaria.de">Bavaria 12kW</button>
+          </div>
+        </div>
+      </form>
+
+      <!-- Sign Up Form -->
+      <form id="form-register" class="auth-form" style="display: none;">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="reg-name" placeholder="John Doe" required>
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="reg-email" placeholder="john@solarfarm.com" required>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="reg-password" placeholder="••••••••" required>
+        </div>
+        <div class="form-group">
+          <label>Solar Capacity (kW)</label>
+          <input type="number" id="reg-capacity" placeholder="e.g. 500" required value="250">
+        </div>
+        <button type="submit" class="btn-solar" style="width: 100%; justify-content: center; margin-top: 0.5rem;">
+          <i data-lucide="user-plus"></i> Create Solar Account
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Floating AI Assistant Button (FAB) -->
+  <button class="chat-fab" id="chat-fab" title="Open SolarClean AI Assistant">
+    <i data-lucide="bot" style="width: 28px; height: 28px;"></i>
+  </button>
+
+  <!-- Floating AI Assistant Chatbot Modal -->
+  <div class="chat-modal" id="chat-modal">
+    <div class="chat-header">
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <i data-lucide="bot" style="color: var(--solar-yellow);"></i>
+        <strong style="color: #FFF; font-size: 0.95rem;">SolarClean AI Assistant</strong>
+      </div>
+      <button id="chat-close" style="background: none; border: none; color: var(--text-muted); cursor: pointer;"><i data-lucide="x"></i></button>
+    </div>
+
+    <div class="chat-messages" id="chat-messages">
+      <div class="chat-msg bot">
+        👋 Hi! I'm your AI Sustainability Assistant. Ask me anything about panel cleaning recommendations, weather forecasts, or energy loss!
+      </div>
+    </div>
+
+    <div class="chat-chips">
+      <button class="chip-btn">Should I clean my panels today?</button>
+      <button class="chip-btn">How much energy am I losing?</button>
+      <button class="chip-btn">Will tomorrow's rain help?</button>
+      <button class="chip-btn">What is my current efficiency?</button>
+    </div>
+
+    <div class="chat-input-row">
+      <input type="text" id="chat-input" placeholder="Ask SolarClean AI...">
+      <button class="btn-solar" id="chat-send" style="padding: 0.5rem 0.8rem;"><i data-lucide="send"></i></button>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container"></div>
+
+  <!-- JS Modules Execution -->
+  <script src="js/bg3d.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/data-simulator.js"></script>
+  <script src="js/weather.js"></script>
+  <script src="js/power.js"></script>
+  <script src="js/ai-engine.js"></script>
+  <script src="js/vision.js"></script>
+  <script src="js/calculator.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/chatbot.js"></script>
+  <script src="js/app.js"></script>
+
+  <!-- Lucide Icons Initialize -->
+  <script>
+    lucide.createIcons();
+  </script>
+
+</body>
+</html>
